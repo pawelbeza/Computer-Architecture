@@ -15,3 +15,18 @@ Course covers theoretical foundations of computer architecture, as well as princ
 
 Since numbers can have up to 200 digits they may not fit into register. 
 Therefore I read input numbers as sequences of characters and perform the column method of addition.
+
+**2. [x86 Architecture](https://en.wikipedia.org/wiki/X86)**
+
+Language*: [NASM](https://en.wikipedia.org/wiki/Netwide_Assembler)
+
+*Task*:
+>Write hybrid program consisting of the main module in [ANSI C](https://en.wikipedia.org/wiki/C_(programming_language)) providing input and output as well as assembly language module which provides function formatdec which is subset of function [sprintf](http://www.cplusplus.com/reference/cstdio/sprintf/) which enables to format a single decimal number with support for all fixed format specifications. Rest of characters of the string should be treated as text which should be copied to the output string.
+
+*Example*:
+
+>input: ./formatdec "Input number is equal to %d" 150
+
+>output: Input number is equal to 150
+
+Solution to the aformentioned task was implemented in 32 bit as well as in 64 bit Assembler. Main differences between those two versions was that in 64 bit Assembler I didn't have to use callee saved registers because in 64 bit Assembler there are more registers which are not saved by the calee. Thanks to that I used less memory on stack comparing to the 32 bit version.
