@@ -1,7 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -m64
+CFLAGS = -Wall -m64 -fno-pie -no-pie
 
-all: main.o formatdec.o
+all: main.o formatdec.o 
 	$(CC) $(CFLAGS) -o formatdec main.o formatdec.o
 
 formatdec.o: formatdec.s

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-char *formatdec(char *s, const char *format, int num);
+char *formatdec(char *s, const char *format, long num);
 
 int main(int argc, char *argv[])
 {
