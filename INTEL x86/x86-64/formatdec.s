@@ -68,9 +68,10 @@ format:
     mov     rsi, r9
     mov     r12, rbx
 
+formatLoop:
     xor     rax, rax            ; width size
     xor     rbx, rbx            ; number of additional characters
-formatLoop:
+
     mov     dl, [rsi]
     mov     [rdi], dl
 

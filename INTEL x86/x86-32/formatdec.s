@@ -65,10 +65,10 @@ format:
     mov     edi, [ebp + 8]
     mov     esi, [ebp + 12]
     mov     [ebp - 4], ebx
-
+formatLoop:
     xor     eax, eax            ; width size
     xor     ebx, ebx            ; number of additional characters
-formatLoop:
+
     mov     dl, [esi]
     mov     [edi], dl
 
