@@ -21,7 +21,6 @@ formatdec:
     ; calculate abs value of rax
     mov     rdx, rax
     cqo
-    ; sar     rdx, 63
     xor     rax, rdx
     sub     rax, rdx
 

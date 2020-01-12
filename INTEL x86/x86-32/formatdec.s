@@ -18,7 +18,7 @@ formatdec:
 
     ; calculate abs value of eax
     mov     edx, eax
-    sar     edx, 31
+    cdq
     xor     eax, edx
     sub     eax, edx
 
