@@ -16,9 +16,9 @@ formatdec:
     mov     ecx, 10             ; divisor
     mov     eax, [ebp + 16]     ; dividend
 
-    ; abs value of eax https://dustri.org/b/absolute-value-in-asm.html
+    ; calculate abs value of eax
     mov     edx, eax
-    sar     edx, 0x1f
+    sar     edx, 31
     xor     eax, edx
     sub     eax, edx
 
@@ -37,9 +37,7 @@ intToString:
     ; reverse the string
 reverseString:
     mov     ebx, esi
-    sub     ebx, buffer ; size of string
-    ; mov     [ebp - 4], edx
-
+    sub     ebx, buffer         ; size of string
 
     mov     edi, buffer
     dec     esi
@@ -49,9 +47,7 @@ reverseString:
     jge     reverseLoop
 
     ; add minus sign
-    ; inc     esi
     inc     ebx
-    ; mov     [esi], byte '-'
 reverseLoop:
     cmp     edi, esi
     jge     format
@@ -70,8 +66,8 @@ format:
     mov     esi, [ebp + 12]
     mov     [ebp - 4], ebx
 
-    xor     eax, eax ; width size
-    xor     ebx, ebx ; number of additional characters
+    xor     eax, eax            ; width size
+    xor     ebx, ebx            ; number of additional characters
 formatLoop:
     mov     dl, [esi]
     mov     [edi], dl
@@ -99,14 +95,6 @@ noFlags:
 
 flags:
     inc     esi
-
-    ; mov     ecx, [ebp + 16]
-    ; test    ecx, ecx
-    ; jl      findWidth
-
-    ; mov     [edi], byte '+'
-    ; inc     edi
-    ; mov     ebx, 1
 
     cmp     dh, '+'
     je      checkPlusSign
@@ -144,8 +132,7 @@ findWidth:
     jg      increment
 
     imul    eax, 10
-    add     eax, ecx
-    sub     eax, '0'
+    lea     eax, [eax + ecx - '0']
 
     inc     esi
     jmp     findWidth
@@ -181,6 +168,8 @@ sign:
     mov     [edi], byte '-'
     inc     edi
     jmp     insert
+
+    ; print sign of the integer
 printPlusSign:
     cmp     dh, ' '
     je     spaceFlag
@@ -195,8 +184,8 @@ spaceFlag:
     mov     [edi], byte ' '
     inc     edi
 
+    ; insert integer to the format
 insert:
-    ; %d occurs so insert number to ouput strings
     inc     esi
     mov     ecx, buffer
 insertInt:
