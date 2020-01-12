@@ -30,3 +30,10 @@ Language*: [NASM](https://en.wikipedia.org/wiki/Netwide_Assembler)
 >output: Input number is equal to 150
 
 Solution to the aformentioned task was implemented in 32 bit as well as in 64 bit Assembler. Main differences between those two versions was that in 64 bit Assembler I didn't have to use callee saved registers because in 64 bit Assembler there are more registers which are not saved by the calee. Thanks to that I used less memory on stack comparing to the 32 bit version.
+
+Implemented function enables specifying width(minimum number of characters to be printed) as well as following flags:
+
+1. **-** Left-justify within the given field width; Right justification is the default (see width sub-specifier).
+2. **+** Forces to precede the result with a plus or minus sign (+ or -) even for positive numbers. By default, only negative numbers are preceded with a -ve sign.
+3. **(space)** If no sign is going to be written, a blank space is inserted before the value.
+4. **0** Left-pads the number with zeroes (0) instead of spaces, where padding is specified (see width sub-specifier).
