@@ -1,11 +1,9 @@
-section .bss
-    buffer: resb 32
-
 section .text
     global  formatdec
 formatdec:
     push    rbp
     mov     rbp, rsp
+    sub     rsp, 20
 
     push    rbx
     push    r12
@@ -14,7 +12,10 @@ formatdec:
     mov     r9, rsi
     mov     r10, rdx
 
-    mov     rsi, buffer
+    lea     rsi, [rbp - 5]
+    mov     [rsi], byte 0
+    dec     rsi
+
     mov     rcx, 10             ; divisor
     mov     rax, r10            ; dividend
 
@@ -23,57 +24,37 @@ formatdec:
     cqo
     xor     rax, rdx
     sub     rax, rdx
-
     ; converting input int to string (the number will be reversed)
 intToString:
     xor     rdx, rdx
     div     rcx
 
-    add     rdx, '0'
-    mov     [rsi], rdx
-    inc     rsi
-
-    test    rax, rax
-    jnz      intToString
-
-    ; reverse the string
-reverseString:
-    mov     rbx, rsi
-    sub     rbx, buffer         ; size of string
-
-    mov     rdi, buffer
+    add     dl, '0'
+    mov     [rsi], dl
     dec     rsi
+    test    rax, rax
+    jnz     intToString
+
+formatting:   
+    lea     rbx, [rbp - 6]
+    sub     rbx, rsi            ; size of string
 
     mov     rax, r10
-    test    rax, rax
-    jge     reverseLoop
-
+    cmp     rax, 0
+    jge     format
     ; add minus sign
     inc     rbx
-reverseLoop:
-    cmp     rdi, rsi
-    jge     format
-    
-    mov     dl, [rsi]
-    mov     dh, [rdi]
-    mov     [rdi], dl
-    mov     [rsi], dh
-    dec     rsi
-    inc     rdi
-    jmp     reverseLoop
-
     ; write formatted data to string
 format:
     mov     rdi, r8
     mov     rsi, r9
     mov     r12, rbx
-
+    ; jmp     end
 formatLoop:
     xor     rax, rax            ; width size
     xor     rbx, rbx            ; number of additional characters
 
     mov     dl, [rsi]
-    mov     [rdi], dl
 
     test    dl, dl
     jz      end
@@ -83,6 +64,9 @@ formatLoop:
 
     inc     rsi
     mov     dh, [rsi]
+
+    test    dh, dh
+    jz      end
 
     cmp     dh, 'd'
     je      sign
@@ -98,7 +82,6 @@ noFlags:
 
 flags:
     inc     rsi
-
     cmp     dh, '+'
     je      checkPlusSign
     
@@ -107,35 +90,57 @@ flags:
 
     cmp     dh, ' '
     jne     increment
-
+spaceFlag:
+    mov     rcx, r10
+    cmp     rcx, 0
+    jl      checkZeroFlag
+    mov     [rdi], byte ' '
+    inc     rdi
+    
 checkPlusSign:
     mov     rcx, r10
-    test    rcx, rcx
-    jl      findWidth
-    mov     rbx, 1
-    jmp     findWidth
+    cmp     rcx, 0
+    jl      checkZeroFlag
 
+    add     rbx, 1
+checkZeroFlag:
+    mov     dl, [rsi]
+    cmp     dl, '0'
+    jne     findWidth
+    mov     dh, '0'
+
+    mov     rcx, r10
+    cmp     rcx, 0
+    jl      zeroFlag     
+
+    cmp     [rsi - 1], byte '+'
+    jne      zeroFlag
+
+    mov     [rdi], byte '+'
+    inc     rdi
 zeroFlag:
     mov     rcx, r10
-    test    rcx, rcx
+    cmp     rcx, 0
     jge     findWidth
+
     mov     [rdi], byte '-'
     inc     rdi
 
     ; find width
 findWidth:
-    movzx   rcx, byte [rsi]
+    mov     cl, [rsi]
 
-    cmp     rcx, 'd'
+    cmp     cl, 'd'
     je      leftJustify
 
-    cmp     rcx, '0'
+    cmp     cl, '0'
     jl      increment
-    cmp     rcx, '9'
+    cmp     cl, '9'
     jg      increment
 
-    imul    rax, 10
-    lea     rax, [rax + rcx - '0']
+    lea    rax, [rax * 4 + rax]
+    movzx   rcx, cl
+    lea     rax, [rax * 2 + rcx - '0']
 
     inc     rsi
     jmp     findWidth
@@ -166,7 +171,7 @@ sign:
     je      insert
 
     mov     rcx, r10
-    test    rcx, rcx
+    cmp     rcx, 0
     jge     printPlusSign
     mov     [rdi], byte '-'
     inc     rdi
@@ -174,23 +179,22 @@ sign:
 
     ; print sign of the integer
 printPlusSign:
-    cmp     dh, ' '
-    je     spaceFlag
-
     cmp     dh, '+'
     jne     insert
 plusFlag:
     mov     [rdi], byte '+'
     inc     rdi
-    jmp     insert
-spaceFlag:
-    mov     [rdi], byte ' '
-    inc     rdi
-
     ; insert integer to the format
 insert:
     inc     rsi
-    mov     rcx, buffer
+
+    lea     rcx, [rbp - 5]
+    sub     rcx, r12
+
+    mov     rbx, r10
+    cmp     rbx, 0
+    jge     insertInt
+    inc     rcx
 insertInt:
     mov     dl, [rcx]
     test    dl, dl
@@ -202,7 +206,7 @@ insertInt:
     jmp     insertInt
 
 rightJustify:
-    test    rax, rax
+    cmp    rax, 0
     jle    formatLoop
 rightJustifyLoop:
     test    rax, rax
@@ -213,12 +217,17 @@ rightJustifyLoop:
     jmp     rightJustifyLoop
 
 increment:
+    mov     [rdi], dl
     inc     rdi
     inc     rsi
     jmp     formatLoop
     
 end:
     mov     rax, r8
+
+    mov     rsp, rbp
+    pop     rbp
+    ret
 
     pop     r12
     pop     rbx

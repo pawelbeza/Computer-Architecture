@@ -1,18 +1,18 @@
-section .bss
-    buffer: resb 32
-
-section .text
+    section .text
     global  formatdec
 formatdec:
     push    ebp
     mov     ebp, esp
-    sub     esp, 4
+    sub     esp, 32
 
     push    esi
     push    edi
     push    ebx
 
-    mov     esi, buffer
+    lea     esi, [ebp - 5]
+    mov     [esi], byte 0
+    dec     esi
+
     mov     ecx, 10             ; divisor
     mov     eax, [ebp + 16]     ; dividend
 
@@ -21,45 +21,27 @@ formatdec:
     cdq
     xor     eax, edx
     sub     eax, edx
-
     ; converting input int to string (the number will be reversed)
 intToString:
     xor     edx, edx
     div     ecx
 
-    add     edx, '0'
-    mov     [esi], edx
-    inc     esi
+    add     dl, '0'
+    mov     [esi], dl
+    dec     esi
 
     test    eax, eax
-    jnz      intToString
+    jnz     intToString
 
-    ; reverse the string
-reverseString:
-    mov     ebx, esi
-    sub     ebx, buffer         ; size of string
-
-    mov     edi, buffer
-    dec     esi
+formatting:   
+    lea     ebx, [ebp - 6]
+    sub     ebx, esi            ; size of string
 
     mov     eax, [ebp + 16]
-    test    eax, eax
-    jge     reverseLoop
-
+    cmp     eax, 0
+    jge     format
     ; add minus sign
     inc     ebx
-reverseLoop:
-    cmp     edi, esi
-    jge     format
-    
-    mov     dl, [esi]
-    mov     dh, [edi]
-    mov     [edi], dl
-    mov     [esi], dh
-    dec     esi
-    inc     edi
-    jmp     reverseLoop
-
     ; write formatted data to string
 format:
     mov     edi, [ebp + 8]
@@ -70,7 +52,6 @@ formatLoop:
     xor     ebx, ebx            ; number of additional characters
 
     mov     dl, [esi]
-    mov     [edi], dl
 
     test    dl, dl
     jz      end
@@ -80,6 +61,9 @@ formatLoop:
 
     inc     esi
     mov     dh, [esi]
+
+    test    dh, dh
+    jz      end
 
     cmp     dh, 'd'
     je      sign
@@ -95,7 +79,6 @@ noFlags:
 
 flags:
     inc     esi
-
     cmp     dh, '+'
     je      checkPlusSign
     
@@ -104,35 +87,57 @@ flags:
 
     cmp     dh, ' '
     jne     increment
-
+spaceFlag:
+    mov     ecx, [ebp + 16]
+    cmp     ecx, 0
+    jl      checkZeroFlag
+    mov     [edi], byte ' '
+    inc     edi
+    
 checkPlusSign:
     mov     ecx, [ebp + 16]
-    test    ecx, ecx
-    jl      findWidth
-    mov     ebx, 1
-    jmp     findWidth
+    cmp     ecx, 0
+    jl      checkZeroFlag
 
+    add     ebx, 1
+checkZeroFlag:
+    mov     dl, [esi]
+    cmp     dl, '0'
+    jne     findWidth
+    mov     dh, '0'
+
+    mov     ecx, [ebp + 16]
+    cmp     ecx, 0
+    jl      zeroFlag     
+
+    cmp     [esi - 1], byte '+'
+    jne      zeroFlag
+
+    mov     [edi], byte '+'
+    inc     edi
 zeroFlag:
     mov     ecx, [ebp + 16]
-    test    ecx, ecx
+    cmp     ecx, 0
     jge     findWidth
+
     mov     [edi], byte '-'
     inc     edi
 
     ; find width
 findWidth:
-    movzx     ecx, byte [esi]
+    mov     cl, [esi]
 
-    cmp     ecx, 'd'
+    cmp     cl, 'd'
     je      leftJustify
 
-    cmp     ecx, '0'
+    cmp     cl, '0'
     jl      increment
-    cmp     ecx, '9'
+    cmp     cl, '9'
     jg      increment
 
-    imul    eax, 10
-    lea     eax, [eax + ecx - '0']
+    lea    eax, [eax * 4 + eax]
+    movzx   ecx, cl
+    lea     eax, [eax * 2 + ecx - '0']
 
     inc     esi
     jmp     findWidth
@@ -163,7 +168,7 @@ sign:
     je      insert
 
     mov     ecx, [ebp + 16]
-    test    ecx, ecx
+    cmp     ecx, 0
     jge     printPlusSign
     mov     [edi], byte '-'
     inc     edi
@@ -171,23 +176,22 @@ sign:
 
     ; print sign of the integer
 printPlusSign:
-    cmp     dh, ' '
-    je     spaceFlag
-
     cmp     dh, '+'
     jne     insert
 plusFlag:
     mov     [edi], byte '+'
     inc     edi
-    jmp     insert
-spaceFlag:
-    mov     [edi], byte ' '
-    inc     edi
-
     ; insert integer to the format
 insert:
     inc     esi
-    mov     ecx, buffer
+
+    lea     ecx, [ebp - 5]
+    sub     ecx, [ebp - 4]
+
+    mov     ebx, [ebp + 16]
+    cmp     ebx, 0
+    jge     insertInt
+    inc     ecx
 insertInt:
     mov     dl, [ecx]
     test    dl, dl
@@ -199,7 +203,7 @@ insertInt:
     jmp     insertInt
 
 rightJustify:
-    test    eax, eax
+    cmp    eax, 0
     jle    formatLoop
 rightJustifyLoop:
     test    eax, eax
@@ -210,6 +214,7 @@ rightJustifyLoop:
     jmp     rightJustifyLoop
 
 increment:
+    mov     [edi], dl
     inc     edi
     inc     esi
     jmp     formatLoop
