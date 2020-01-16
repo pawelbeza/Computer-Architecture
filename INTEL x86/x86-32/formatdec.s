@@ -3,7 +3,7 @@
 formatdec:
     push    ebp
     mov     ebp, esp
-    sub     esp, 32
+    sub     esp, 16
 
     push    esi
     push    edi
@@ -17,7 +17,6 @@ formatdec:
     mov     eax, [ebp + 16]     ; dividend
 
     ; calculate abs value of eax
-    mov     edx, eax
     cdq
     xor     eax, edx
     sub     eax, edx
