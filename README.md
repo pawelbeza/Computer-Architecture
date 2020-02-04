@@ -1,4 +1,4 @@
-# ARKO - Computer Architecture
+# Computer Architecture
 Course covers theoretical foundations of computer architecture, as well as principles of constructing program models of processors and lists of instructions, implementation of high-level languages, principles of processor operation, construction of memory hierarchy and systemic aspects of processor architecture. 
 
 ---
